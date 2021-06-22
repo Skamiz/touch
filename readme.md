@@ -4,8 +4,6 @@ A small mod that makes it possible to navigate in complete darkness.
 While standing in darkness punch a node with your empty hand
 to make it vissible for a short while.
 
-#settings
-
 
 #license
 MIT License

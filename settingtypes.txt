@@ -1,0 +1,14 @@
+# Touch timeout
+#
+# Time, in secconds, of how long a touched node stays visible.
+touch_glow_time (Touch time) int 5 1 60
+
+# Touch Brightness
+#
+# Minimal brightness of a touched node.
+touch_glow_strength (Touch brightening) int 2 1 15
+
+# Maximal touch light
+#
+# Maximal light level at touched position to activate touch navigation.
+touch_max_light (Maximal touch light) int 1 0 15

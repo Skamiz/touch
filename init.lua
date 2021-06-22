@@ -4,18 +4,19 @@ local modpath = minetest.get_modpath(modname)
 -- dofile(modpath .. "/other_file.lua")
 
 --[[
-make lifetime configurable
 rotate entity to reflect node rotation
 maybe figure out whats wrong with glow updating
+
+doesn't quite work with connected parts of connected nodeboxes
 ]]
 
-local function lerp(a, b, scale)
-	return a * (1 - scale) + b * scale
-end
+local GLOW_TIME = tonumber(minetest.settings:get("touch_glow_time")) or 5
+local GLOW_STRENGTH = tonumber(minetest.settings:get("touch_glow_strength")) or 2
+local MAX_LIGHT = tonumber(minetest.settings:get("touch_max_light")) or 1
 
+-- By default objects with 'visual = "item"' are too large so they need to be rescaled
+local scale = (2/3) + 0.001 -- +0.001 to avoid Z fighting
 
-local lifetime = 5
-local scale = (2/3) + 0.001
 minetest.register_entity(modname .. ":node_object", {
 	initial_properties = {
 		visual = "item",
@@ -23,8 +24,9 @@ minetest.register_entity(modname .. ":node_object", {
 		physical = false,
 		pointable = false,
 		static_save = false,
-		glow = 2,
+		glow = GLOW_STRENGTH,
 		shaded = false,
+		collisionbox = {-0.0, 0.0, -0.0, 0.0, 0.0, 0.0},
 	},
 	on_activate = function(self, staticdata, dtime_s)
 		self.time = 0
@@ -33,11 +35,7 @@ minetest.register_entity(modname .. ":node_object", {
 	on_step = function(self, dtime, moveresult)
 		self.time = self.time + dtime
 
-		-- WARNING: For some obscure reason the glow is NOT UPDATED!
-		-- self.object:set_properties({glow = lerp(15,0,self.time/lifetime)})
-		-- minetest.chat_send_all("" .. lerp(15,0,self.time/lifetime))
-
-		if self.time > lifetime then
+		if self.time > GLOW_TIME then
 			self.object:remove()
 		end
 	end,
@@ -45,12 +43,16 @@ minetest.register_entity(modname .. ":node_object", {
 
 
 minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
-	-- minetest.chat_send_all(type(puncher:get_wielded_item():get_name()) .. " | '" .. puncher:get_wielded_item():get_name() .. "'")
-
+	local light_above = minetest.get_node_light(pointed_thing.above)
 	if puncher:get_wielded_item():get_name() == "" and
-		minetest.get_node_light(puncher:get_pos()) < 2
+		light_above <= MAX_LIGHT
 	then
 		local node_obj = minetest.add_entity(pointed_thing.under, modname .. ":node_object")
 		node_obj:set_properties({wield_item = node.name})
+		
+		-- to avoid the touched node to be darker then before
+		if light_above > GLOW_STRENGTH then
+			node_obj:set_properties({glow = light_above})
+		end
 	end
 end)
