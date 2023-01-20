@@ -1,10 +1,9 @@
 local modname = minetest.get_current_modname()
 local modpath = minetest.get_modpath(modname)
 
--- dofile(modpath .. "/other_file.lua")
+local rotations = dofile(modpath .. "/rotations.lua")
 
 --[[
-rotate entity to reflect node rotation
 maybe figure out whats wrong with glow updating
 
 doesn't quite work with connected parts of connected nodeboxes
@@ -50,7 +49,7 @@ minetest.register_entity(modname .. ":node_object", {
 minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
 	local light_above = minetest.get_node_light(pointed_thing.above)
 	if puncher:get_wielded_item():get_name() == "" and
-		light_above <= MAX_LIGHT
+			light_above <= MAX_LIGHT
 	then
 		local node_obj = minetest.add_entity(pointed_thing.under, modname .. ":node_object")
 		node_obj:set_properties({wield_item = node.name})
@@ -61,11 +60,20 @@ minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
 		end
 
 		touched_nodes[minetest.hash_node_position(pointed_thing.under)] = true
+
+		do
+			local node_def = minetest.registered_nodes[node.name]
+			if node_def and node_def.paramtype2 == "facedir" then
+				local rot = rotations.facedir[node.param2]
+				node_obj:set_rotation(rot)
+			end
+		end
+
 	end
 end)
 
 minetest.register_on_dignode(function(pos, oldnode, digger)
-	node_index = minetest.hash_node_position(pos)
+	local node_index = minetest.hash_node_position(pos)
 	if touched_nodes[node_index] then
 		local objects = minetest.get_objects_in_area(pos, pos)
 		for _, v in pairs(objects) do
