@@ -12,3 +12,8 @@ touch_glow_strength (Touch brightening) int 2 1 15
 #
 # Maximal light level at touched position to activate touch navigation.
 touch_max_light (Maximal touch light) int 1 0 15
+
+# Shape only
+#
+# Touched nodes will only diplay their shape, but not their texture.
+touch_shape_only (Shape only) bool false
